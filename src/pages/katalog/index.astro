@@ -1,0 +1,8 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import CatalogFilters from '../../components/CatalogFilters.astro';
+import { lands } from '../../data/lands';
+---
+<SiteLayout title="Katalog Tanah" description="Jelajahi contoh pilihan tanah berdasarkan kategori, lokasi, luas, dan harga.">
+  <main><CatalogFilters lands={lands} /></main>
+</SiteLayout>

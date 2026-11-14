@@ -1,0 +1,40 @@
+---
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import WhatsAppButton from '../../components/WhatsAppButton.astro';
+import { lands } from '../../data/lands';
+import { formatRupiah } from '../../lib/format';
+export function getStaticPaths() {
+  return lands.map((land) => ({ params: { slug: land.slug }, props: { land } }));
+}
+const { land } = Astro.props;
+---
+<SiteLayout title={land.nama} description={land.deskripsi} image={land.foto_utama} canonicalPath={`/katalog/${land.slug}/`}>
+  <main class="detail">
+    <div class="detail__gallery">{land.foto.slice(0, 5).map((photo, i) => <img src={photo} alt={`Contoh foto ${land.nama}, gambar ${i + 1}`} loading={i === 0 ? 'eager' : 'lazy'} />)}</div>
+    <div class="detail__layout">
+      <section class="detail__copy">
+        <p class="detail__sample">Data contoh — bukan penawaran tanah sungguhan</p>
+        <h1>{land.nama}</h1>
+        <p class="detail__meta">{land.lokasi.desa}, {land.lokasi.kecamatan}, {land.lokasi.kota} · {land.luas_m2.toLocaleString('id-ID')} m² · {land.legalitas} · {land.status}</p>
+        <p>{land.deskripsi}</p>
+        <h2>Di sekitar lokasi</h2><ul>{land.fasilitas_sekitar.map((item) => <li>{item}</li>)}</ul>
+        {land.maps_url && <a href={land.maps_url} target="_blank" rel="noopener noreferrer">Lihat peta Google Maps</a>}
+      </section>
+      <aside class="detail__price"><strong>{formatRupiah(land.harga_total)}</strong><p>{formatRupiah(land.harga_per_m2)}/m²</p><p>{land.luas_m2.toLocaleString('id-ID')} m² · {land.legalitas}</p><p>Status: {land.status}</p>{land.status !== 'terjual' && <WhatsAppButton land={land} label="Tanya tanah ini" />}<small>Pesan akan terisi otomatis sesuai tanah ini.</small></aside>
+    </div>
+  </main>
+</SiteLayout>
+<style>
+  .detail { max-width: 1200px; margin: auto; padding: 32px 24px 80px; }
+  .detail__gallery { display: grid; grid-template-columns: 2fr 1fr 1fr; grid-template-rows: repeat(2, minmax(160px, 260px)); gap: 8px; overflow: hidden; border-radius: 12px; }
+  .detail__gallery img { width: 100%; height: 100%; object-fit: cover; }
+  .detail__gallery img:first-child { grid-row: span 2; }
+  .detail__layout { display: grid; grid-template-columns: minmax(0, 640px) minmax(280px, 360px); justify-content: space-between; gap: 40px; padding-top: 32px; }
+  .detail__copy h1 { font-size: 28px; }
+  .detail__copy p { font-size: 14px; line-height: 1.6; }
+  .detail__meta, .detail__sample { color: #6a6a6a; }
+  .detail__price { position: sticky; top: 100px; align-self: start; padding: 24px; border-radius: 14px; background: white; }
+  .detail__price strong { font-size: 22px; }
+  .detail__price small { display: block; margin-top: 12px; color: #6a6a6a; }
+  @media (max-width: 700px) { .detail { padding: 16px 16px 100px; } .detail__gallery { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; } .detail__gallery img { flex: 0 0 85%; aspect-ratio: 4/3; border-radius: 12px; scroll-snap-align: start; } .detail__layout { grid-template-columns: 1fr; gap: 20px; } .detail__price { position: static; } }
+</style>

@@ -1,0 +1,60 @@
+---
+import type { Land } from '../data/lands';
+import LandCard from './LandCard.astro';
+import { filterLands, sortLands } from '../lib/catalog';
+interface Props { lands: Land[] }
+const { lands } = Astro.props;
+const categories = [
+  ['semua', 'Semua'],
+  ['kavling-perumahan', 'Kavling Perumahan'],
+  ['kebun', 'Kebun'],
+  ['sawah', 'Sawah'],
+  ['komersial', 'Komersial'],
+] as const;
+const filtered = filterLands(lands, { kategori: (Astro.url.searchParams.get('kategori') as any) || 'semua' });
+const sorted = sortLands(filtered, (Astro.url.searchParams.get('urut') as any) || 'terbaru');
+---
+
+<section class="catalog" aria-labelledby="catalog-title">
+  <div class="catalog__filter">
+    <form action="/katalog/" method="get">
+      <label>Lokasi<input name="q" type="search" placeholder="Kota atau kecamatan" value={Astro.url.searchParams.get('q') || ''} /></label>
+      <label>Luas<select name="luas"><option value="">Semua luas</option><option value="small">Di bawah 500 m²</option><option value="large">500 m² ke atas</option></select></label>
+      <label>Urutkan<select name="urut"><option value="terbaru">Terbaru</option><option value="harga-rendah">Harga terendah</option><option value="harga-tinggi">Harga tertinggi</option><option value="luas">Luas terbesar</option></select></label>
+      <button type="submit" aria-label="Cari tanah"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.3" stroke="currentColor" stroke-width="1.8"/><path d="m15.5 15.5 4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
+    </form>
+  </div>
+  <nav class="catalog__tabs" aria-label="Kategori tanah">
+    {categories.map(([value, label]) => <a class:list={{ active: (Astro.url.searchParams.get('kategori') || 'semua') === value }} href={value === 'semua' ? '/katalog/' : `/katalog/?kategori=${value}`}>{label}</a>)}
+  </nav>
+  <div class="catalog__heading"><h1 id="catalog-title">Pilihan tanah <span aria-hidden="true">→</span></h1><label>Urutkan<select onchange="location.href='?urut='+this.value"><option value="terbaru">Terbaru</option><option value="harga-rendah">Harga terendah</option><option value="harga-tinggi">Harga tertinggi</option><option value="luas">Luas terbesar</option></select></label></div>
+  <div class="catalog__grid">
+    {sorted.filter((land) => {
+      const q = Astro.url.searchParams.get('q')?.toLowerCase();
+      const luas = Astro.url.searchParams.get('luas');
+      return (!q || `${land.nama} ${land.lokasi.kecamatan} ${land.lokasi.kota}`.toLowerCase().includes(q)) && (!luas || (luas === 'small' ? land.luas_m2 < 500 : land.luas_m2 >= 500));
+    }).map((land) => <LandCard land={land} />)}
+  </div>
+  {sorted.length === 0 && <p class="catalog__empty">Belum ada tanah yang cocok. Coba ubah filter pencarian.</p>}
+</section>
+
+<style>
+  .catalog { max-width: 1280px; margin: 0 auto; padding: 48px 24px 80px; }
+  .catalog__filter { max-width: 880px; margin: 0 auto 24px; padding: 8px 12px 8px 24px; border-radius: 9999px; background: #fff; box-shadow: var(--shadow-cat-subtle); }
+  .catalog__filter form { display: grid; grid-template-columns: repeat(3, 1fr) 48px; align-items: center; }
+  .catalog__filter label { display: grid; gap: 4px; padding: 8px 20px; border-right: 1px solid #ebebeb; font-size: 14px; font-weight: 600; }
+  .catalog__filter input, .catalog__filter select { min-width: 0; border: 0; background: transparent; color: #6a6a6a; font: inherit; font-size: 14px; }
+   .catalog__filter button { display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; background: var(--color-accent-icon); color: #fff; line-height: 0; }
+   .catalog__filter button svg { display: block; }
+  .catalog__tabs { display: flex; gap: 24px; overflow-x: auto; border-bottom: 1px solid #ebebeb; }
+  .catalog__tabs a { flex: 0 0 auto; padding: 14px 2px; color: #6a6a6a; font-size: 14px; text-decoration: none; }
+  .catalog__tabs a.active { border-bottom: 2px solid #222; color: #222; }
+  .catalog__heading { display: flex; align-items: center; justify-content: space-between; margin: 28px 0 18px; }
+  .catalog__heading h1 { margin: 0; font-size: 22px; font-weight: 500; }
+  .catalog__heading label { color: #6a6a6a; font-size: 14px; }
+  .catalog__heading select { margin-left: 8px; padding: 8px; border: 1px solid #ebebeb; border-radius: 8px; background: white; }
+  .catalog__grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 32px 24px; }
+  .catalog__empty { padding: 48px 0; color: #6a6a6a; text-align: center; }
+  @media (max-width: 900px) { .catalog__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (max-width: 640px) { .catalog { padding: 28px 16px 64px; } .catalog__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px 12px; } .catalog__filter { border-radius: 20px; padding: 8px; } .catalog__filter form { grid-template-columns: 1fr 48px; } .catalog__filter label { display: none; } .catalog__filter label:first-child { display: grid; border: 0; } .catalog__tabs { gap: 18px; } .catalog__heading label { display: none; } }
+</style>

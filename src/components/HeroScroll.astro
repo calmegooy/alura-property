@@ -1,0 +1,161 @@
+---
+import { HERO_SCROLL_LENGTH } from '../config/site';
+import { heroChapters } from '../config/hero-scroll';
+---
+
+<section class="hero-scroll" style={`--scroll-length:${HERO_SCROLL_LENGTH}`}>
+  <div class="hero-scroll__sticky">
+    <canvas class="hero-scroll__canvas" aria-hidden="true"></canvas>
+    <img class="hero-scroll__poster" src="/frames/poster.webp" alt="" fetchpriority="high" />
+    <div class="hero-scroll__overlay" aria-live="polite">
+      {heroChapters.map((chapter, index) => <article class="hero-scroll__chapter" data-index={index} style={`--from:${chapter.fromProgress};--to:${chapter.toProgress};text-align:${chapter.align}`}>
+        <h1>{chapter.headline}</h1>
+        {'sub' in chapter && <p>{chapter.sub}</p>}
+        {index === 0 && <div class="hero-scroll__actions"><a href="/katalog/" class="hero-scroll__catalog">Lihat katalog</a></div>}
+        {index === heroChapters.length - 1 && <a class="hero-scroll__catalog" href="/katalog/">Jelajahi katalog</a>}
+      </article>)}
+    </div>
+    <span class="hero-scroll__progress" aria-live="polite">Memuat… 0%</span>
+    <span class="hero-scroll__hint">↓<small>Gulir</small></span>
+    <span class="hero-scroll__sample">Visual contoh</span>
+  </div>
+</section>
+<noscript><style>.hero-scroll{height:auto!important}.hero-scroll__sticky{position:relative!important;height:70svh}.hero-scroll__canvas,.hero-scroll__progress,.hero-scroll__hint{display:none!important}.hero-scroll__chapter{position:relative!important;opacity:1!important;transform:none!important;padding:16px}</style></noscript>
+
+<script>
+  import { calculateCover, getFrameIndex, getScrollProgress } from '../lib/scroll-video';
+  import { getHeroFrameVariant } from '../lib/hero-media';
+
+  const root = document.querySelector<HTMLElement>('.hero-scroll');
+  const canvas = root?.querySelector('canvas');
+  const poster = root?.querySelector<HTMLImageElement>('.hero-scroll__poster');
+  const progressLabel = root?.querySelector<HTMLElement>('.hero-scroll__progress');
+  const chapters = [...(root?.querySelectorAll<HTMLElement>('.hero-scroll__chapter') || [])];
+  if (root && canvas && poster) {
+    const context = canvas.getContext('2d');
+    const data = await fetch('/frames/manifest.json').then((response) => response.json()).catch(() => null);
+    let variant = getHeroFrameVariant(window.innerWidth);
+    let set = data?.[variant];
+    const images = new Map<number, HTMLImageElement>();
+    let current = -1;
+    let loadedCount = 0;
+    let raf = 0;
+    let lastDrawn = -1;
+    const resize = () => {
+      const nextVariant = getHeroFrameVariant(window.innerWidth);
+      if (nextVariant !== variant) {
+        variant = nextVariant;
+        set = data?.[variant];
+        images.clear();
+        loadedCount = 0;
+        lastDrawn = -1;
+        current = -1;
+        poster.src = `/frames/${variant === 'mobile' ? 'poster-mobile' : 'poster'}.webp`;
+      }
+      const ratio = Math.min(devicePixelRatio || 1, 2);
+      canvas.width = Math.round(canvas.clientWidth * ratio);
+      canvas.height = Math.round(canvas.clientHeight * ratio);
+      requestUpdate();
+    };
+    const draw = (index: number) => {
+      if (!context || !set || !poster.complete) return;
+      const image = images.get(index) || [...images.entries()].filter(([i, img]) => i <= index && img.complete).sort((a, b) => b[0] - a[0])[0]?.[1];
+      const source = image || poster;
+      const cover = calculateCover(source.naturalWidth, source.naturalHeight, canvas.width, canvas.height);
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(source, cover.x, cover.y, cover.width, cover.height);
+    };
+    const loadWindow = (center: number) => {
+      if (!set) return;
+      const start = Math.max(0, center - 10);
+      const end = Math.min(set.count - 1, center + 10);
+      for (let index = start; index <= end; index++) {
+        if (images.has(index)) continue;
+        const image = new Image();
+        image.src = `/frames/${variant}/${set.pattern.replace('%04d', String(index + 1).padStart(4, '0'))}`;
+        images.set(index, image);
+        image.decode().then(() => {
+          loadedCount++;
+          if (progressLabel) {
+            const pct = Math.round((loadedCount / set.count) * 100);
+            progressLabel.textContent = `Memuat… ${pct}%`;
+            if (pct >= 95) progressLabel.hidden = true;
+          }
+          if (index === current) draw(current);
+        }).catch(() => {});
+      }
+    };
+    const update = () => {
+      raf = 0;
+      const rect = root.getBoundingClientRect();
+      const top = window.scrollY + rect.top;
+      const progress = getScrollProgress(window.scrollY, top, root.offsetHeight, window.innerHeight);
+      current = set ? getFrameIndex(progress, set.count) : -1;
+      chapters.forEach((chapter) => {
+        const from = Number(chapter.style.getPropertyValue('--from'));
+        const to = Number(chapter.style.getPropertyValue('--to'));
+        const active = progress >= from && progress <= to;
+        chapter.style.opacity = active ? '1' : '0';
+        chapter.style.transform = active ? 'translateY(0)' : 'translateY(12px)';
+      });
+      if (current !== lastDrawn) {
+        loadWindow(current);
+        draw(current);
+        lastDrawn = current;
+      }
+      root.classList.toggle('has-scrolled', window.scrollY > top + 12);
+    };
+    const requestUpdate = () => { if (!raf) raf = requestAnimationFrame(update); };
+    poster.src = `/frames/${variant === 'mobile' ? 'poster-mobile' : 'poster'}.webp`;
+    resize();
+    window.addEventListener('resize', resize, { passive: true });
+    window.addEventListener('scroll', requestUpdate, { passive: true });
+    poster.addEventListener('load', requestUpdate, { once: true });
+    requestUpdate();
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      root.classList.add('reduced-motion');
+      window.removeEventListener('scroll', requestUpdate);
+    }
+  }
+</script>
+
+<style>
+  .hero-scroll { height: calc(var(--scroll-length, 400) * 1vh); position: relative; }
+  .hero-scroll__sticky { position: sticky; top: 80px; height: calc(100svh - 80px); overflow: hidden; background: #222; color: #fff; }
+  .hero-scroll__canvas,.hero-scroll__poster { position:absolute;inset:0;width:100%;height:100%;object-fit:cover }
+  .hero-scroll__canvas { z-index:1 }
+  .hero-scroll__poster { z-index:0 }
+  .hero-scroll__sticky::after { position:absolute;inset:0;z-index:2;background:linear-gradient(180deg,rgb(35 30 20 / 22%),rgb(35 30 20 / 34%) 58%,rgb(35 30 20 / 45%));content:'';pointer-events:none }
+  .hero-scroll__overlay { position:absolute;inset:0;z-index:3;display:grid;place-items:center;padding:24px }
+  .hero-scroll__chapter { position:absolute;width:min(100%, 1000px);max-width:1000px;opacity:0;transform:translateY(12px);transition:opacity 240ms ease-out,transform 240ms ease-out;pointer-events:none }
+  .hero-scroll__chapter h1 { margin:0 0 16px;font-size:clamp(42px,7vw,88px);font-weight:400;line-height:1.04;text-wrap:balance; }
+  .hero-scroll__chapter p { max-width:600px;margin:0 auto;font-size:18px;line-height:1.5;text-wrap:balance; }
+  .hero-scroll__actions { display:flex;align-items:center;justify-content:center;gap:16px;margin-top:28px;pointer-events:auto }
+  .hero-scroll__catalog { box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 28px;border-radius:9999px;background:#f7f5ef;color:#302d24;font-size:16px;font-weight:500;line-height:1;text-decoration:none;white-space:nowrap;pointer-events:auto }
+  .hero-scroll__progress,.hero-scroll__sample { position:absolute;z-index:4;bottom:20px;padding:7px 12px;border-radius:999px;background:rgb(0 0 0 / 48%);font-size:12px }
+  .hero-scroll__progress { left:20px }
+  .hero-scroll__sample { right:20px }
+  .hero-scroll__hint { position:absolute;z-index:4;bottom:18px;left:50%;display:grid;place-items:center;width:36px;height:36px;border:1px solid white;border-radius:50%;transition:opacity 200ms }
+  .hero-scroll__hint small { position:absolute;top:40px;font-size:12px }
+  .has-scrolled .hero-scroll__hint { opacity:0 }
+  .reduced-motion { height:auto }
+  .reduced-motion .hero-scroll__sticky { position:relative;top:auto }
+  .reduced-motion .hero-scroll__chapter { position:relative;opacity:1;transform:none;padding:8px }
+  @media (max-width:640px) {
+    .hero-scroll__sticky { top:64px;height:calc(100svh - 64px); }
+    .hero-scroll__overlay { padding:24px 20px; }
+    .hero-scroll__chapter { max-width:360px; }
+    .hero-scroll__chapter { text-align:center !important; }
+    .hero-scroll__chapter h1 { margin-bottom:12px;font-size:clamp(32px,9vw,40px);line-height:1.08; }
+    .hero-scroll__chapter p { max-width:320px;font-size:16px;line-height:1.45; }
+    .hero-scroll__actions { flex-direction:column;align-items:stretch;gap:12px;margin-top:24px; }
+    .hero-scroll__actions > * { width:min(100%, 280px);min-height:48px;margin-inline:auto; }
+    .hero-scroll__actions .wa-button { min-height:48px;padding-inline:20px;font-size:15px; }
+    .hero-scroll__progress,.hero-scroll__sample { bottom:16px;font-size:11px; }
+    .hero-scroll__progress { left:12px; }
+    .hero-scroll__sample { right:12px; }
+    .hero-scroll__hint { bottom:12px; }
+    .reduced-motion .hero-scroll__chapter:not(:first-child) { display:none; }
+  }
+  @media (prefers-reduced-motion:reduce) { .hero-scroll__chapter,.hero-scroll__hint { transition:none } }
+</style>

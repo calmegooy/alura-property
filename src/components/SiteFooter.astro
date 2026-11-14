@@ -1,0 +1,51 @@
+---
+import { SITE_NAME } from '../config/site';
+import WhatsAppButton from './WhatsAppButton.astro';
+---
+
+<footer class="site-footer">
+  <div class="site-footer__content">
+    <section class="site-footer__contact" id="kontak" aria-labelledby="footer-contact-title">
+      <div>
+        <h2 id="footer-contact-title">Ada Tanah Yang Ingin Anda Lihat?</h2>
+        <p>Tanyakan status, dokumen, atau jadwal survei langsung lewat WhatsApp.</p>
+      </div>
+      <WhatsAppButton label="Hubungi Kami" size="editorial" class="wa-button--inverse" />
+    </section>
+
+    <div class="site-footer__columns">
+      <section><h3>Jelajahi</h3><a href="/katalog/">Semua tanah</a><a href="/katalog/?kategori=kavling-perumahan">Kavling perumahan</a><a href="/katalog/?kategori=kebun">Kebun</a></section>
+      <section><h3>Informasi</h3><a href="/#proses">Proses pembelian</a><a href="/#faq">Pertanyaan umum</a></section>
+      <section><h3>Kontak</h3><a href="/#kontak">WhatsApp</a><a href="/katalog/">Lokasi pilihan</a></section>
+    </div>
+
+    <div class="site-footer__bottom">
+      <p>© {new Date().getFullYear()} {SITE_NAME}. Informasi contoh untuk pratinjau.</p>
+    </div>
+  </div>
+  <div class="site-footer__visual" aria-hidden="true"></div>
+</footer>
+
+<style>
+  .site-footer { background: var(--color-faint); }
+  .site-footer__content { max-width: 1220px; margin-inline: auto; padding: 24px 24px 32px; transform: translateY(-40px); }
+  .site-footer__contact { display: flex; align-items: center; justify-content: space-between; gap: 32px; padding-bottom: 24px; border-bottom: 1px solid #dedbd2; }
+  .site-footer__contact h2 { margin: 0 0 8px; color: #222; font-size: clamp(28px, 4vw, 36px); font-weight: 500; line-height: 1.12; }
+  .site-footer__contact p { margin: 0; color: #625d51; line-height: 1.5; }
+  .site-footer__columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; padding: 24px 0; }
+  .site-footer__columns section { display: grid; align-content: start; gap: 12px; }
+  .site-footer__columns h3 { margin: 0 0 4px; color: #222; font-size: 14px; font-weight: 600; }
+  .site-footer a { width: fit-content; color: #6a6a6a; font-size: 14px; text-decoration: none; }
+  .site-footer a:hover { color: #222; }
+  .site-footer__bottom { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid #dedbd2; padding-top: 16px; }
+  .site-footer__bottom p { margin: 0; color: #6a6a6a; font-size: 13px; }
+  .site-footer__visual { height: clamp(320px, 37.5vw, 720px); background: linear-gradient(to bottom, #f7f5ef 0%, rgb(247 245 239 / 94%) 8%, rgb(247 245 239 / 78%) 18%, rgb(247 245 239 / 48%) 32%, rgb(247 245 239 / 20%) 46%, rgb(247 245 239 / 0%) 62%), url('/brand/housing-development.webp') center 48% / cover no-repeat; }
+  @media (max-width: 640px) {
+    .site-footer__content { padding: 24px 20px 32px; }
+    .site-footer__contact { align-items: flex-start; flex-direction: column; gap: 20px; padding-bottom: 24px; }
+    .site-footer__columns { grid-template-columns: 1fr 1fr; gap: 24px 16px; padding: 24px 0; }
+    .site-footer__columns section { gap: 10px; }
+    .site-footer__bottom { align-items: flex-start; flex-direction: column; }
+    .site-footer__visual { height: 240px; background-position: center, 62% center; }
+  }
+</style>

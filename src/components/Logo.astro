@@ -1,0 +1,20 @@
+---
+import { SITE_NAME } from '../config/site';
+interface Props {
+  variant?: 'mark' | 'full';
+  class?: string;
+}
+const { variant = 'full', class: className = '' } = Astro.props;
+const logoPath = variant === 'mark' ? '/brand/logo-mark.svg' : '/brand/logo.svg';
+---
+
+<a class:list={['brand-logo', className]} href="/" aria-label={SITE_NAME}>
+  <img src={logoPath} alt="" width={variant === 'mark' ? 48 : 180} height={variant === 'mark' ? 48 : 60} />
+  {variant === 'full' && <span class="brand-logo__fallback">{SITE_NAME}</span>}
+</a>
+
+<style>
+  .brand-logo { display: inline-flex; align-items: center; min-height: 44px; }
+  .brand-logo img { display: block; width: auto; max-width: 180px; max-height: 56px; object-fit: contain; }
+  .brand-logo__fallback { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+</style>
