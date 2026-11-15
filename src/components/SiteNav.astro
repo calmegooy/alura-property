@@ -129,8 +129,27 @@ const isActiveLink = (href: string) => {
     .site-nav__inner { padding: 0 20px; }
     .site-nav__links, .site-nav__actions > :global(.wa-button) { display: none; }
     .site-nav__menu { display: flex; }
-    .site-nav__mobile:not([hidden]) { position: absolute; top: 80px; left: 0; right: 0; display: grid; gap: 0; padding: 8px 20px 16px; background: white; border-bottom: 1px solid var(--color-hairline); }
-    .site-nav__mobile a { min-height: 48px; display: flex; align-items: center; }
+    .site-nav__mobile:not([hidden]) {
+      position: absolute;
+      top: 80px;
+      left: 0;
+      right: 0;
+      display: grid;
+      gap: 2px;
+      padding: 8px 20px 18px;
+      background: rgb(247 245 239 / 96%);
+      -webkit-backdrop-filter: blur(18px) saturate(130%);
+      backdrop-filter: blur(18px) saturate(130%);
+      border-bottom: 1px solid rgb(73 56 17 / 10%);
+      box-shadow: 0 14px 32px rgb(73 56 17 / 8%);
+    }
+    .site-nav__mobile a { min-height: 46px; display: flex; align-items: center; border-bottom: 1px solid rgb(73 56 17 / 6%); }
+    .site-nav__mobile a:last-child { border-bottom: 0; }
+  }
+  @media (max-width: 640px) {
+    .site-nav { height: 64px; }
+    .site-nav__inner { padding: 0 16px; }
+    .site-nav__mobile:not([hidden]) { top: 64px; padding: 6px 16px 16px; }
   }
   @media (prefers-reduced-motion: reduce) { .site-nav * { scroll-behavior: auto; } }
 </style>

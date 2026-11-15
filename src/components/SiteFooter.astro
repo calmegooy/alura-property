@@ -79,13 +79,19 @@ const generalWhatsAppHref = buildWhatsAppLink();
       ),
       url('/brand/housing-development.webp') center 52% / cover no-repeat;
   }
+  @media (max-width: 820px) {
+    .site-footer__contact { align-items: flex-start; flex-direction: column; gap: 20px; padding-bottom: 22px; }
+  }
   @media (max-width: 640px) {
     .site-footer__wrap { padding: 0 16px; }
     .site-footer__content { padding: 24px 20px; border-radius: 22px; }
-    .site-footer__contact { align-items: flex-start; flex-direction: column; gap: 20px; padding-bottom: 22px; }
     .site-footer__columns { grid-template-columns: 1fr 1fr; gap: 24px 16px; padding: 22px 0; }
-    .site-footer__columns section { gap: 10px; }
+    .site-footer__columns section { min-width: 0; gap: 10px; }
+    .site-footer a { overflow-wrap: anywhere; }
     .site-footer__bottom { align-items: flex-start; flex-direction: column; }
     .site-footer__visual { height: 260px; margin-top: -110px; background-position: center, 62% center; }
+  }
+  @media (max-width: 420px) {
+    .site-footer__columns { grid-template-columns: 1fr; gap: 20px; }
   }
 </style>

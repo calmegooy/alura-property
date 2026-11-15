@@ -104,10 +104,18 @@ const featured = lands.filter((land) => land.unggulan);
   }
   .faq details[open] summary::after { content: '−'; background: #493811; color: #fff; }
   .faq details p { max-width: 680px; margin: 0 0 20px; color: #575246; line-height: 1.65; }
+  @media (max-width: 1024px) {
+    .featured__row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+  }
   @media (max-width: 780px) {
-    .featured__row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .faq { padding: 28px 20px 88px; }
+    .statement { padding: 72px 20px; }
+    .featured { padding: 24px 16px 48px; }
+    .featured__row { gap: 14px; }
+    .faq { padding: 28px 16px 72px; }
     .faq details { padding: 0 18px; border-radius: 16px; }
+  }
+  @media (max-width: 400px) {
+    .featured__row { grid-template-columns: minmax(0, 1fr); }
   }
   @media (prefers-reduced-motion: reduce) {
     .faq details { transition: none; }

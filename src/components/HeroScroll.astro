@@ -17,7 +17,6 @@ import { heroChapters } from '../config/hero-scroll';
     </div>
     <span class="hero-scroll__progress" aria-live="polite">Memuat… 0%</span>
     <span class="hero-scroll__hint">↓<small>Gulir</small></span>
-    <span class="hero-scroll__sample">Visual contoh</span>
   </div>
 </section>
 <noscript><style>.hero-scroll{height:auto!important}.hero-scroll__sticky{position:relative!important;height:70svh}.hero-scroll__canvas,.hero-scroll__progress,.hero-scroll__hint{display:none!important}.hero-scroll__chapter{position:relative!important;opacity:1!important;transform:none!important;padding:16px}</style></noscript>
@@ -132,10 +131,8 @@ import { heroChapters } from '../config/hero-scroll';
   .hero-scroll__chapter p { max-width:600px;margin:0 auto;font-size:18px;line-height:1.5;text-wrap:balance; }
   .hero-scroll__actions { display:flex;align-items:center;justify-content:center;gap:16px;margin-top:28px;pointer-events:auto }
   .hero-scroll__catalog { box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;min-height:56px;padding:0 28px;border-radius:9999px;background:#f7f5ef;color:#302d24;font-size:16px;font-weight:500;line-height:1;text-decoration:none;white-space:nowrap;pointer-events:auto }
-  .hero-scroll__progress,.hero-scroll__sample { position:absolute;z-index:4;bottom:20px;padding:7px 12px;border-radius:999px;background:rgb(0 0 0 / 48%);font-size:12px }
-  .hero-scroll__progress { left:20px }
-  .hero-scroll__sample { right:20px }
-  .hero-scroll__hint { position:absolute;z-index:4;bottom:18px;left:50%;display:grid;place-items:center;width:36px;height:36px;border:1px solid white;border-radius:50%;transition:opacity 200ms }
+  .hero-scroll__progress { position:absolute;z-index:4;bottom:20px;left:20px;padding:7px 12px;border-radius:999px;background:rgb(0 0 0 / 48%);font-size:12px }
+  .hero-scroll__hint { position:absolute;z-index:4;bottom:28px;left:50%;transform:translateX(-50%);display:grid;place-items:center;width:36px;height:36px;border:1px solid white;border-radius:50%;transition:opacity 200ms }
   .hero-scroll__hint small { position:absolute;top:40px;font-size:12px }
   .has-scrolled .hero-scroll__hint { opacity:0 }
   .reduced-motion { height:auto }
@@ -151,10 +148,8 @@ import { heroChapters } from '../config/hero-scroll';
     .hero-scroll__actions { flex-direction:column;align-items:stretch;gap:12px;margin-top:24px; }
     .hero-scroll__actions > * { width:min(100%, 280px);min-height:48px;margin-inline:auto; }
     .hero-scroll__actions .wa-button { min-height:48px;padding-inline:20px;font-size:15px; }
-    .hero-scroll__progress,.hero-scroll__sample { bottom:16px;font-size:11px; }
-    .hero-scroll__progress { left:12px; }
-    .hero-scroll__sample { right:12px; }
-    .hero-scroll__hint { bottom:12px; }
+    .hero-scroll__progress { bottom:16px;left:12px;font-size:11px; }
+    .hero-scroll__hint { bottom:24px; }
     .reduced-motion .hero-scroll__chapter:not(:first-child) { display:none; }
   }
   @media (prefers-reduced-motion:reduce) { .hero-scroll__chapter,.hero-scroll__hint { transition:none } }
