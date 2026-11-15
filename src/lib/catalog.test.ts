@@ -60,4 +60,18 @@ describe('catalog helpers', () => {
     expect(sorted.map((land) => land.slug)).toEqual(['kebun-baru', 'sawah-lama']);
     expect(lands.map((land) => land.slug)).toEqual(['kebun-baru', 'sawah-lama']);
   });
+
+  it('filters by transaction type and falls back to harga_per_m2 when sorting price', () => {
+    const mixed: Land[] = [
+      { ...lands[0], transaksi: 'jual', harga_total: undefined, harga_per_m2: 3_750_000 },
+      { ...lands[1], transaksi: 'sewa', harga_total: 125_000_000 },
+    ];
+    expect(filterLands(mixed, { transaksi: 'sewa' }).map((l) => l.slug)).toEqual([
+      'sawah-lama',
+    ]);
+    expect(sortLands(mixed, 'harga-rendah').map((l) => l.slug)).toEqual([
+      'kebun-baru',
+      'sawah-lama',
+    ]);
+  });
 });

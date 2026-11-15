@@ -8,13 +8,30 @@ const links = [
   { href: '/#faq', label: 'FAQ' },
   { href: '/#kontak', label: 'Kontak' },
 ];
+const pathname = Astro.url.pathname;
+const isActiveLink = (href: string) => {
+  if (href === '/') return pathname === '/';
+  if (href === '/katalog/') return pathname.startsWith('/katalog');
+  return false;
+};
 ---
 
 <header class="site-nav">
   <div class="site-nav__inner">
     <Logo />
     <nav class="site-nav__links" aria-label="Navigasi utama">
-      {links.map((link) => <a href={link.href}>{link.label}</a>)}
+      {links.map((link) => {
+        const active = isActiveLink(link.href);
+        return (
+          <a
+            href={link.href}
+            class:list={{ 'is-active': active }}
+            aria-current={active ? 'page' : undefined}
+          >
+            {link.label}
+          </a>
+        );
+      })}
     </nav>
     <div class="site-nav__actions">
       <WhatsAppButton label="Hubungi kami" size="nav" />
@@ -24,13 +41,33 @@ const links = [
     </div>
   </div>
   <nav id="mobile-menu" class="site-nav__mobile" aria-label="Navigasi mobile" hidden>
-    {links.map((link) => <a href={link.href}>{link.label}</a>)}
+    {links.map((link) => {
+      const active = isActiveLink(link.href);
+      return (
+        <a
+          href={link.href}
+          class:list={{ 'is-active': active }}
+          aria-current={active ? 'page' : undefined}
+        >
+          {link.label}
+        </a>
+      );
+    })}
   </nav>
 </header>
 
 <script>
   const toggle = document.querySelector<HTMLButtonElement>('.site-nav__menu');
   const menu = document.querySelector<HTMLElement>('#mobile-menu');
+  const navLinks = [...document.querySelectorAll<HTMLAnchorElement>('.site-nav__links a, .site-nav__mobile a')];
+
+  const closeMenu = () => {
+    if (!menu || !toggle) return;
+    toggle.setAttribute('aria-expanded', 'false');
+    toggle.setAttribute('aria-label', 'Buka menu');
+    menu.hidden = true;
+  };
+
   toggle?.addEventListener('click', () => {
     if (!menu) return;
     const open = toggle.getAttribute('aria-expanded') === 'true';
@@ -38,15 +75,52 @@ const links = [
     toggle.setAttribute('aria-label', open ? 'Buka menu' : 'Tutup menu');
     menu.hidden = open;
   });
+
+  const syncActiveNav = () => {
+    const path = window.location.pathname;
+    const hash = window.location.hash;
+    navLinks.forEach((link) => {
+      const href = link.getAttribute('href') || '';
+      let active = false;
+      if (path.startsWith('/katalog')) {
+        active = href === '/katalog/';
+      } else if (path === '/') {
+        active = hash ? href === `/${hash}` : href === '/';
+      }
+      link.classList.toggle('is-active', active);
+      if (active) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+  };
+
+  navLinks.forEach((link) => {
+    link.addEventListener('click', () => {
+      closeMenu();
+      const href = link.getAttribute('href') || '';
+      if (window.location.pathname === '/' && href.startsWith('/#')) {
+        const targetHash = href.slice(1);
+        navLinks.forEach((item) => {
+          const itemHref = item.getAttribute('href') || '';
+          const active = itemHref === `/${targetHash}`;
+          item.classList.toggle('is-active', active);
+          if (active) item.setAttribute('aria-current', 'page');
+          else item.removeAttribute('aria-current');
+        });
+      }
+    });
+  });
+
+  window.addEventListener('hashchange', syncActiveNav);
+  syncActiveNav();
 </script>
 
 <style>
-  .site-nav { position: sticky; top: 0; z-index: 30; height: 80px; background: #fff; border-bottom: 1px solid var(--color-hairline); }
+  .site-nav { position: sticky; top: 0; z-index: 30; height: 80px; background: rgb(247 245 239 / 84%); -webkit-backdrop-filter: blur(18px) saturate(130%); backdrop-filter: blur(18px) saturate(130%); border-bottom: 1px solid rgb(73 56 17 / 8%); }
   .site-nav__inner { height: 100%; max-width: 1440px; margin: 0 auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
   .site-nav__links { display: flex; align-items: center; gap: 28px; height: 100%; }
   .site-nav__links a, .site-nav__mobile a { color: #6a6a6a; font-size: 16px; font-weight: 500; text-decoration: none; }
   .site-nav__links a:hover, .site-nav__mobile a:hover { color: #222; }
-  .site-nav__links a[href='/'] { color: #222; }
+  .site-nav__links a.is-active, .site-nav__mobile a.is-active { color: #222; font-weight: 600; }
   .site-nav__actions { display: flex; align-items: center; gap: 12px; }
   .site-nav__menu { display: none; width: 40px; height: 40px; border: 0; border-radius: 50%; background: var(--color-faint); align-items: center; justify-content: center; flex-direction: column; gap: 5px; }
   .site-nav__menu span { width: 15px; height: 1.5px; background: #222; }

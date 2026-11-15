@@ -23,7 +23,25 @@ const featured = lands.filter((land) => land.unggulan);
 
     <PropertyGuide />
 
-    <section class="faq" id="faq"><h2>Pertanyaan umum</h2><details><summary>Apa perbedaan SHM, HGB, dan AJB?</summary><p>Ketiganya merujuk pada dokumen dengan status hukum berbeda. Minta salinan dokumen dan verifikasi dengan PPAT atau kantor pertanahan sebelum transaksi.</p></details><details><summary>Bisakah saya survei tanah?</summary><p>Bisa. Hubungi admin untuk memastikan bidang masih dapat dikunjungi dan mengatur waktu survei.</p></details><details><summary>Apakah tersedia pembayaran cicilan?</summary><p>Tanyakan pilihan pembayaran kepada admin. Ketentuan dapat berbeda untuk setiap tanah.</p></details></section>
+    <section class="faq" id="faq">
+      <h2>Pertanyaan umum</h2>
+      <details>
+        <summary>Properti apa saja yang tersedia di Alura Property?</summary>
+        <p>Saat ini kami menyediakan pilihan tanah pekarangan, lahan usaha, rumah tinggal, serta properti komersial sewa seperti ruko dan lahan gudang di wilayah Yogyakarta, Sleman, dan Bantul.</p>
+      </details>
+      <details>
+        <summary>Apakah harga yang tercantum masih bisa dinegosiasikan?</summary>
+        <p>Sebagian besar penawaran terbuka untuk negosiasi, baik untuk harga jual total, harga per m², maupun sewa tahunan. Hubungi kami melalui WhatsApp untuk membahas penawaran langsung bersama pemilik.</p>
+      </details>
+      <details>
+        <summary>Bagaimana cara menjadwalkan survei dan mengetahui alamat lengkapnya?</summary>
+        <p>Klik tombol WhatsApp pada properti yang Anda minati. Kami akan memastikan ketersediaan unit terbaru, membagikan titik lokasi, lalu mengatur waktu survei bersama Anda.</p>
+      </details>
+      <details>
+        <summary>Bagaimana pemeriksaan legalitas dan dokumen properti sebelum transaksi?</summary>
+        <p>Informasi sertifikat seperti SHM atau SHM Pekarangan dicantumkan pada properti yang sudah terkonfirmasi. Salinan dokumen dapat ditinjau saat proses lanjut dan diverifikasi melalui PPAT sebelum pembayaran.</p>
+      </details>
+    </section>
 
   </main>
 </SiteLayout>
@@ -37,16 +55,61 @@ const featured = lands.filter((land) => land.unggulan);
   .section-heading h2 { font-size: 22px; font-weight: 500; }
   .section-heading a { color: #222; }
   .featured__row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
-  .faq { max-width: 850px; margin: auto; padding: 20px 24px 100px; }
-  .faq h2 { margin: 0 0 24px; font-size: clamp(32px, 4vw, 42px); font-weight: 500; line-height: 1.12; text-align: center; text-wrap: balance; }
-  .faq details { max-width: 760px; margin-inline: auto; border-bottom: 1px solid #dedbd2; }
-  .faq summary { position: relative; padding: 20px 40px 20px 0; cursor: pointer; font-weight: 500; list-style: none; }
+  .faq {
+    max-width: 900px;
+    margin: auto;
+    padding: 36px 24px 96px;
+    background: transparent;
+  }
+  .faq h2 { margin: 0 0 28px; font-size: clamp(32px, 4vw, 42px); font-weight: 500; line-height: 1.12; text-align: center; text-wrap: balance; }
+  .faq details {
+    max-width: 780px;
+    margin: 0 auto 12px;
+    padding: 0 24px;
+    border: 1px solid rgb(255 255 255 / 92%);
+    border-radius: 18px;
+    background: linear-gradient(160deg, rgb(255 255 255 / 78%) 0%, rgb(247 245 239 / 64%) 100%);
+    -webkit-backdrop-filter: blur(16px) saturate(130%);
+    backdrop-filter: blur(16px) saturate(130%);
+    box-shadow:
+      0 8px 24px rgb(73 56 17 / 4%),
+      0 0 0 1px rgb(73 56 17 / 6%),
+      inset 0 1px 0 rgb(255 255 255 / 95%);
+    transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  }
+  .faq details:hover { background: rgb(255 255 255 / 86%); border-color: rgb(73 56 17 / 14%); }
+  .faq details[open] {
+    background: rgb(255 255 255 / 90%);
+    border-color: rgb(73 56 17 / 18%);
+    box-shadow: 0 14px 32px rgb(73 56 17 / 7%), 0 0 0 1px rgb(73 56 17 / 8%), inset 0 1px 0 #fff;
+  }
+  .faq summary { position: relative; padding: 20px 44px 20px 0; cursor: pointer; font-weight: 500; line-height: 1.45; list-style: none; color: #222; }
   .faq summary::-webkit-details-marker { display: none; }
-  .faq summary::after { content: '+'; position: absolute; right: 4px; top: 18px; font-size: 20px; font-weight: 400; }
-  .faq details[open] summary::after { content: '−'; }
-  .faq details p { max-width: 680px; margin: 0 0 20px; color: #6a6a6a; line-height: 1.6; }
+  .faq summary::after {
+    content: '+';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: rgb(73 56 17 / 8%);
+    color: #493811;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1;
+  }
+  .faq details[open] summary::after { content: '−'; background: #493811; color: #fff; }
+  .faq details p { max-width: 680px; margin: 0 0 20px; color: #575246; line-height: 1.65; }
   @media (max-width: 780px) {
     .featured__row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .faq { padding: 28px 20px 92px; }
+    .faq { padding: 28px 20px 88px; }
+    .faq details { padding: 0 18px; border-radius: 16px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .faq details { transition: none; }
   }
 </style>

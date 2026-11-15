@@ -1,0 +1,14 @@
+node_modules
+dist
+.astro
+.git
+.gitignore
+.env
+.env.*
+.superpowers
+coverage
+docs
+Asset
+Alura Propery - Asset Logo
+*.docx
+*.pdf

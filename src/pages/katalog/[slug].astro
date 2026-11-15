@@ -2,39 +2,290 @@
 import SiteLayout from '../../layouts/SiteLayout.astro';
 import WhatsAppButton from '../../components/WhatsAppButton.astro';
 import { lands } from '../../data/lands';
-import { formatRupiah } from '../../lib/format';
+import { formatArea, formatLocation, formatRupiah } from '../../lib/format';
+import { toSafeExternalUrl } from '../../lib/url';
+
 export function getStaticPaths() {
   return lands.map((land) => ({ params: { slug: land.slug }, props: { land } }));
 }
+
 const { land } = Astro.props;
+const location = formatLocation(land.lokasi, 'full');
+const areaLabel = formatArea(land.luas_m2);
+const transactionLabel = land.transaksi === 'sewa' ? 'Disewakan' : 'Dijual';
+const categoryLabels: Record<string, string> = {
+  tanah: 'Tanah',
+  rumah: 'Rumah',
+  komersial: 'Komersial',
+  kost: 'Kost Eksklusif',
+  'kavling-perumahan': 'Kavling Perumahan',
+  kebun: 'Kebun',
+  sawah: 'Sawah',
+};
+const categoryLabel = categoryLabels[land.kategori] ?? land.kategori;
+const statusLabels: Record<string, string> = {
+  tersedia: 'Tersedia',
+  dipesan: 'Dipesan',
+  terjual: 'Terjual',
+};
+const statusLabel = statusLabels[land.status] ?? land.status;
+
+const isRent = land.transaksi === 'sewa';
+const periodSuffix = isRent ? `/${land.periode_sewa ?? 'tahun'}` : '';
+const mainPrice =
+  typeof land.harga_total === 'number'
+    ? `${formatRupiah(land.harga_total)}${periodSuffix}`
+    : typeof land.harga_per_m2 === 'number'
+      ? `${formatRupiah(land.harga_per_m2)}/m²${periodSuffix}`
+      : 'Hubungi admin';
+const priceCaption = isRent ? 'Tarif sewa' : 'Harga penawaran';
+const secondaryPriceNote =
+  typeof land.harga_total === 'number' && typeof land.harga_per_m2 === 'number'
+    ? `${formatRupiah(land.harga_per_m2)}/m²${periodSuffix}`
+    : undefined;
+
+const rawSpecs = land.spesifikasi_detail ?? [
+  ...(typeof land.luas_m2 === 'number' ? [{ label: 'Luas tanah', value: areaLabel }] : []),
+  ...(land.legalitas !== 'Perlu konfirmasi' ? [{ label: 'Legalitas', value: land.legalitas }] : []),
+];
+const specs = rawSpecs.filter(
+  (item) => !item.value.toLowerCase().includes('perlu konfirmasi'),
+);
+const isSingle = land.foto.length === 1;
+const isPortraitSingle = isSingle && Boolean(land.foto_utama_portrait);
+const safeMapsUrl = toSafeExternalUrl(land.maps_url);
 ---
 <SiteLayout title={land.nama} description={land.deskripsi} image={land.foto_utama} canonicalPath={`/katalog/${land.slug}/`}>
   <main class="detail">
-    <div class="detail__gallery">{land.foto.slice(0, 5).map((photo, i) => <img src={photo} alt={`Contoh foto ${land.nama}, gambar ${i + 1}`} loading={i === 0 ? 'eager' : 'lazy'} />)}</div>
+    <nav class="detail__breadcrumb" aria-label="Navigasi katalog">
+      <a href="/katalog/">← Kembali ke katalog</a>
+    </nav>
+
+    <div
+      class:list={[
+        'detail__gallery',
+        isSingle && 'detail__gallery--single',
+        isPortraitSingle && 'detail__gallery--portrait',
+      ]}
+    >
+      {land.foto.slice(0, 5).map((photo, i) => (
+        <img
+          src={photo}
+          alt={land.contoh ? `Contoh foto ${land.nama}, gambar ${i + 1}` : `Foto ${land.nama}, gambar ${i + 1}`}
+          loading={i === 0 ? 'eager' : 'lazy'}
+        />
+      ))}
+    </div>
+
     <div class="detail__layout">
       <section class="detail__copy">
-        <p class="detail__sample">Data contoh — bukan penawaran tanah sungguhan</p>
+        {land.contoh && <p class="detail__sample">Data contoh — bukan penawaran sungguhan</p>}
+        <div class="detail__tags">
+          <span class="detail__tag">{transactionLabel}</span>
+          <span class="detail__category">{categoryLabel}</span>
+        </div>
         <h1>{land.nama}</h1>
-        <p class="detail__meta">{land.lokasi.desa}, {land.lokasi.kecamatan}, {land.lokasi.kota} · {land.luas_m2.toLocaleString('id-ID')} m² · {land.legalitas} · {land.status}</p>
-        <p>{land.deskripsi}</p>
-        <h2>Di sekitar lokasi</h2><ul>{land.fasilitas_sekitar.map((item) => <li>{item}</li>)}</ul>
-        {land.maps_url && <a href={land.maps_url} target="_blank" rel="noopener noreferrer">Lihat peta Google Maps</a>}
+        <p class="detail__location">{location}</p>
+        <p class="detail__description">{land.deskripsi}</p>
+
+        {specs.length > 0 && (
+          <section class="detail__section" aria-labelledby="specs-title">
+            <h2 id="specs-title">Spesifikasi properti</h2>
+            <dl class="detail__specs">
+              {specs.map((item) => (
+                <div class="detail__spec-row">
+                  <dt>{item.label}</dt>
+                  <dd>{item.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        )}
+
+        {land.fasilitas_sekitar.length > 0 && (
+          <section class="detail__section" aria-labelledby="nearby-title">
+            <h2 id="nearby-title">Lingkungan & akses sekitar</h2>
+            <ul class="detail__nearby">
+              {land.fasilitas_sekitar.map((item) => <li>{item}</li>)}
+            </ul>
+          </section>
+        )}
+
+        {safeMapsUrl && (
+          <p class="detail__maps">
+            <a href={safeMapsUrl} target="_blank" rel="noopener noreferrer">Lihat lokasi di Google Maps →</a>
+          </p>
+        )}
       </section>
-      <aside class="detail__price"><strong>{formatRupiah(land.harga_total)}</strong><p>{formatRupiah(land.harga_per_m2)}/m²</p><p>{land.luas_m2.toLocaleString('id-ID')} m² · {land.legalitas}</p><p>Status: {land.status}</p>{land.status !== 'terjual' && <WhatsAppButton land={land} label="Tanya tanah ini" />}<small>Pesan akan terisi otomatis sesuai tanah ini.</small></aside>
+
+      <aside class="detail__price">
+        <p class="detail__price-label">{priceCaption}</p>
+        <div class="detail__price-row">
+          <strong>{mainPrice}</strong>
+          {land.harga_nego && <span class="detail__nego">Nego</span>}
+        </div>
+        {secondaryPriceNote && <p class="detail__price-note">{secondaryPriceNote}</p>}
+
+        <dl class="detail__summary">
+          {typeof land.luas_m2 === 'number' && (
+            <div>
+              <dt>Luas tanah</dt>
+              <dd>{areaLabel}</dd>
+            </div>
+          )}
+          {land.legalitas !== 'Perlu konfirmasi' && (
+            <div>
+              <dt>Legalitas</dt>
+              <dd>{land.legalitas}</dd>
+            </div>
+          )}
+          <div>
+            <dt>Transaksi</dt>
+            <dd>{transactionLabel}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>{statusLabel}</dd>
+          </div>
+        </dl>
+
+        {land.status !== 'terjual' && (
+          <div class="detail__cta">
+            <WhatsAppButton
+              land={land}
+              label={isRent ? 'Tanya sewa via WhatsApp' : 'Tanya via WhatsApp'}
+            />
+          </div>
+        )}
+        <small>Terhubung langsung ke WhatsApp admin untuk detail alamat dan jadwal survei.</small>
+      </aside>
     </div>
   </main>
 </SiteLayout>
+
 <style>
-  .detail { max-width: 1200px; margin: auto; padding: 32px 24px 80px; }
-  .detail__gallery { display: grid; grid-template-columns: 2fr 1fr 1fr; grid-template-rows: repeat(2, minmax(160px, 260px)); gap: 8px; overflow: hidden; border-radius: 12px; }
-  .detail__gallery img { width: 100%; height: 100%; object-fit: cover; }
+  .detail { max-width: 1200px; margin: auto; padding: 28px 24px 88px; }
+  .detail__breadcrumb { margin-bottom: 18px; }
+  .detail__breadcrumb a {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 14px;
+    border: 1px solid rgb(255 255 255 / 90%);
+    border-radius: 9999px;
+    background: linear-gradient(160deg, rgb(255 255 255 / 76%) 0%, rgb(247 245 239 / 64%) 100%);
+    -webkit-backdrop-filter: blur(12px) saturate(130%);
+    backdrop-filter: blur(12px) saturate(130%);
+    box-shadow: 0 4px 14px rgb(73 56 17 / 4%), 0 0 0 1px rgb(73 56 17 / 7%);
+    color: #493811;
+    font-size: 13.5px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: border-color 150ms ease, color 150ms ease;
+  }
+  .detail__breadcrumb a:hover { color: #222; border-color: rgb(73 56 17 / 18%); }
+
+  .detail__gallery {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-rows: repeat(2, minmax(160px, 250px));
+    gap: 8px;
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid rgb(255 255 255 / 88%);
+    border-radius: 24px;
+    background: var(--color-faint);
+    box-shadow: 0 16px 40px rgb(73 56 17 / 8%), 0 0 0 1px rgb(73 56 17 / 6%);
+  }
+  .detail__gallery img { display: block; width: 100%; height: 100%; object-fit: cover; }
   .detail__gallery img:first-child { grid-row: span 2; }
-  .detail__layout { display: grid; grid-template-columns: minmax(0, 640px) minmax(280px, 360px); justify-content: space-between; gap: 40px; padding-top: 32px; }
-  .detail__copy h1 { font-size: 28px; }
-  .detail__copy p { font-size: 14px; line-height: 1.6; }
-  .detail__meta, .detail__sample { color: #6a6a6a; }
-  .detail__price { position: sticky; top: 100px; align-self: start; padding: 24px; border-radius: 14px; background: white; }
-  .detail__price strong { font-size: 22px; }
-  .detail__price small { display: block; margin-top: 12px; color: #6a6a6a; }
-  @media (max-width: 700px) { .detail { padding: 16px 16px 100px; } .detail__gallery { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; } .detail__gallery img { flex: 0 0 85%; aspect-ratio: 4/3; border-radius: 12px; scroll-snap-align: start; } .detail__layout { grid-template-columns: 1fr; gap: 20px; } .detail__price { position: static; } }
+  .detail__gallery--single { display: block; width: 100%; height: clamp(280px, 44vw, 520px); }
+  .detail__gallery--single img:first-child { width: 100%; height: 100%; object-fit: cover; object-position: center 42%; }
+  .detail__gallery--portrait {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: clamp(320px, 46vw, 520px);
+    padding: 16px;
+    box-sizing: border-box;
+    background: linear-gradient(160deg, rgb(255 255 255 / 72%) 0%, rgb(247 245 239 / 86%) 100%);
+  }
+  .detail__gallery--portrait img:first-child { width: auto; max-width: 100%; height: 100%; border-radius: 14px; object-fit: contain; box-shadow: 0 8px 24px rgb(73 56 17 / 10%); }
+
+  .detail__layout { display: grid; grid-template-columns: minmax(0, 660px) minmax(290px, 360px); justify-content: space-between; align-items: start; gap: 40px; padding-top: 32px; }
+  .detail__sample { margin: 0 0 12px; color: #6a6a6a; font-size: 13px; }
+  .detail__tags { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .detail__tag { padding: 5px 12px; border-radius: 9999px; background: rgb(73 56 17 / 9%); color: #493811; font-size: 12px; font-weight: 600; }
+  .detail__category { padding: 5px 12px; border: 1px solid rgb(73 56 17 / 10%); border-radius: 9999px; background: rgb(255 255 255 / 72%); color: #695c3d; font-size: 12px; font-weight: 500; }
+  .detail__copy h1 { margin: 0 0 8px; color: #222; font-size: clamp(26px, 3vw, 34px); font-weight: 500; line-height: 1.18; }
+  .detail__location { margin: 0 0 18px; color: #6a6a6a; font-size: 15px; }
+  .detail__description { margin: 0; color: #222; font-size: 15px; line-height: 1.7; }
+
+  .detail__section {
+    margin-top: 24px;
+    padding: 22px 24px;
+    border: 1px solid rgb(255 255 255 / 92%);
+    border-radius: 20px;
+    background: linear-gradient(160deg, rgb(255 255 255 / 78%) 0%, rgb(247 245 239 / 64%) 100%);
+    -webkit-backdrop-filter: blur(16px) saturate(130%);
+    backdrop-filter: blur(16px) saturate(130%);
+    box-shadow:
+      0 12px 32px rgb(73 56 17 / 5%),
+      0 0 0 1px rgb(73 56 17 / 6%),
+      inset 0 1px 0 rgb(255 255 255 / 95%);
+  }
+  .detail__section h2 { margin: 0 0 14px; font-size: 16px; font-weight: 600; color: #493811; }
+  .detail__specs { margin: 0; }
+  .detail__spec-row { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 16px; padding: 12px 0; border-top: 1px solid rgb(73 56 17 / 10%); font-size: 14px; line-height: 1.5; }
+  .detail__spec-row dt { color: #6a6a6a; }
+  .detail__spec-row dd { margin: 0; color: #222; font-weight: 500; }
+
+  .detail__nearby { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; color: #222; font-size: 14px; line-height: 1.6; }
+  .detail__nearby li { position: relative; padding: 11px 0 11px 18px; border-top: 1px solid rgb(73 56 17 / 10%); }
+  .detail__nearby li::before { content: ''; position: absolute; left: 0; top: 19px; width: 6px; height: 6px; border-radius: 50%; background: #695c3d; }
+
+  .detail__maps { margin-top: 20px; }
+  .detail__maps a {
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 18px;
+    border: 1px solid rgb(255 255 255 / 90%);
+    border-radius: 9999px;
+    background: linear-gradient(160deg, rgb(255 255 255 / 78%) 0%, rgb(247 245 239 / 64%) 100%);
+    box-shadow: 0 6px 18px rgb(73 56 17 / 5%), 0 0 0 1px rgb(73 56 17 / 8%);
+    color: #493811;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .detail__maps a:hover { border-color: rgb(73 56 17 / 20%); }
+
+  .detail__price { position: sticky; top: 100px; padding: 24px; border: 1px solid rgb(255 255 255 / 92%); border-radius: 22px; background: linear-gradient(160deg, rgb(255 255 255 / 80%) 0%, rgb(247 245 239 / 68%) 100%); -webkit-backdrop-filter: blur(18px) saturate(130%); backdrop-filter: blur(18px) saturate(130%); box-shadow: 0 12px 32px rgb(73 56 17 / 5%), 0 0 0 1px rgb(73 56 17 / 6%), inset 0 1px 0 rgb(255 255 255 / 95%); }
+  .detail__price-label { margin: 0 0 6px; color: #6a6a6a; font-size: 13px; }
+  .detail__price-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .detail__price-row strong { font-size: 24px; font-weight: 600; line-height: 1.25; color: #222; }
+  .detail__nego { padding: 3px 10px; border-radius: 9999px; background: rgb(73 56 17 / 9%); color: #493811; font-size: 12px; font-weight: 600; }
+  .detail__price-note { margin: 6px 0 0; color: #6a6a6a; font-size: 13px; line-height: 1.45; }
+
+  .detail__summary { margin: 20px 0; }
+  .detail__summary div { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-top: 1px solid rgb(73 56 17 / 10%); font-size: 14px; }
+  .detail__summary dt { color: #6a6a6a; }
+  .detail__summary dd { margin: 0; color: #222; font-weight: 500; text-align: right; }
+
+  .detail__cta :global(.wa-button) { width: 100%; min-height: 48px; font-size: 15px; }
+  .detail__price small { display: block; margin-top: 12px; color: #6a6a6a; font-size: 12px; line-height: 1.5; text-align: center; }
+
+  @media (max-width: 820px) {
+    .detail { padding: 18px 16px 88px; }
+    .detail__gallery { display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory; background: transparent; border: 0; border-radius: 16px; box-shadow: none; }
+    .detail__gallery img { flex: 0 0 85%; aspect-ratio: 4 / 3; border-radius: 16px; scroll-snap-align: start; }
+    .detail__gallery--single { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; overflow: hidden; box-shadow: 0 12px 28px rgb(73 56 17 / 8%); }
+    .detail__gallery--single img:first-child { flex: none; width: 100%; height: 100%; max-height: 360px; }
+    .detail__gallery--portrait { display: flex; width: 100%; height: auto; aspect-ratio: auto; padding: 10px; border: 1px solid rgb(255 255 255 / 90%); background: linear-gradient(160deg, rgb(255 255 255 / 72%) 0%, rgb(247 245 239 / 86%) 100%); }
+    .detail__gallery--portrait img:first-child { flex: none; width: auto; max-width: 100%; height: auto; max-height: 420px; }
+    .detail__layout { grid-template-columns: 1fr; gap: 24px; padding-top: 24px; }
+    .detail__section { padding: 18px; border-radius: 18px; }
+    .detail__spec-row { grid-template-columns: 132px minmax(0, 1fr); gap: 12px; }
+    .detail__price { position: static; border-radius: 20px; }
+  }
 </style>
