@@ -1,7 +1,7 @@
 export const SITE_NAME = 'Alura Property';
-export const SITE_TAGLINE = 'Temukan tanah sesuai kebutuhan Anda.';
+export const SITE_TAGLINE = 'Pilihan tanah, rumah, dan properti di Yogyakarta.';
 export const SITE_DESCRIPTION =
-  'Jelajahi pilihan tanah berdasarkan lokasi, luas, harga, dan status. Hubungi Alura Property untuk menanyakan detail dan jadwal survei.';
+  'Lihat pilihan tanah pekarangan, rumah tinggal, lahan usaha, dan ruko di Yogyakarta, Sleman, serta Bantul. Cek lokasi, luas, dan jadwalkan survei langsung lewat WhatsApp.';
 export const SITE_URL = import.meta.env.PUBLIC_SITE_URL || 'https://example.com';
 export const WHATSAPP_NUMBER =
   import.meta.env.PUBLIC_WHATSAPP_NUMBER || '628122586867';
